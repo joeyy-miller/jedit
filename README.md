@@ -6,8 +6,8 @@ Enter: `.jedit FILENAME` into your terminal. Don't include a file name if you wi
 
 # Commands: 
 + `CTRL + S`: Save the file changes
-+ `CTRL + Q': Quit the file without saving
-+ 'CTRL + F': Find text in the document.
++ `CTRL + Q`: Quit the file without saving
++ `CTRL + F`: Find text in the document.
 
 # Syntax Highlighting Supported:
 + HTML
@@ -15,4 +15,4 @@ Enter: `.jedit FILENAME` into your terminal. Don't include a file name if you wi
 + C
 + C++
 
-build: 03262023c
+build: `03262023c`
