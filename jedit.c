@@ -126,6 +126,35 @@ char *HTML_HL_keywords[] = {
   "<|", "|>", NULL
 };
 
+char *JAVASCRIPT_HL_extensions[] = { ".js", NULL };
+char *JAVASCRIPT_HL_keywords[] = {
+  "abstract", "arguments", "await", "boolean", "break", "byte", "case", 
+  "catch", "char", "class", "const", "continue", "debugger", "default", 
+  "delete", "do", "double", "else", "enum", "eval", "export", "extends", 
+  "final", "finally", "float|", "for", "function", "goto", "if", "implements",
+  "import", "in", "instanceof", "int", "interface", "let|", "long|", "native", 
+  "new", "package", "private", "protected", "public", "return|", "short", 
+  "static", "super", "switch", "synchronized", "this|", "throw", "throws", "transient",
+  "try", "typeof", "var|", "void", "volatile", "while", "with", "yield",
+
+
+  "<?", ">", "NULL", "true", "false", NULL
+};
+
+char *PHP_HL_extensions[] = { ".php", NULL };
+char *PHP_HL_keywords[] = {
+  "abstract", "and", "as", "break", "callable", "case", "catch", "class", "clone", "const", 
+  "continue", "declare", "default", "do", "echo", "else", "elseif", "empty", "enddeclare", 
+  "endfor", "endforeach", "endif", "endswitch", "endwhile", "extends", "final", "finally",
+  "fn", "for", "foreach", "function", "global", "goto", "if", "implements", "include", 
+  "include_once", "instanceof", "insteadof", "interface", "isset", "list", "namespace", 
+  "new", "or", "print", "private", "protected", "public", "require", "require_once", 
+  "return", "static", "switch", "throw", "trait", "try", "unset", "use", "var", "while", 
+  "xor", "yield", "yield",
+
+  "<|", "|>", NULL
+};
+
 struct editorSyntax HLDB[] = {
   {
     "c",
@@ -142,10 +171,24 @@ struct editorSyntax HLDB[] = {
       HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
   {
-    "html",
+    "HTML",
     HTML_HL_extensions,
     HTML_HL_keywords,
     "//", "<!--", "-->",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "javascript",
+    JAVASCRIPT_HL_extensions,
+    JAVASCRIPT_HL_keywords,
+    "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "php",
+    PHP_HL_extensions,
+    PHP_HL_keywords,
+    "//", "/*", "*/",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
