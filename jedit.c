@@ -20,8 +20,8 @@
 /*** defines ***/
 
 #define JEDIT_VERSION "0.2 build 230324a"
-#define KILO_TAB_STOP 8
-#define KILO_QUIT_TIMES 3
+#define JEDIT_TAB_STOP 4
+#define JEDIT_QUIT_TIMES 3
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -104,12 +104,48 @@ char *C_HL_keywords[] = {
   "void|", NULL
 };
 
+char *PYTHON_HL_extensions[] = { ".python", ".py", NULL };
+char *PYTHON_HL_keywords[] = {
+  "and", "as", "assert", "break", "class", "continue", "def", "del",
+  "elif", "else", "excpet", "False", "finally", "for", "from", "global",
+  "if", "import", "in", "is", "lambda", "None", "nonlocal", "not", "or", 
+  "pass", "raise", "return", "True", "try", "while", "with", "yield",
+
+
+  "int|", "long|", "double|", "float|", "char|", NULL
+};
+
+char *HTML_HL_extensions[] = { ".html", ".htm", NULL };
+char *HTML_HL_keywords[] = {
+  "<html>", "<html/>", "img", "body", "class", "<p|", "<a|", "href",
+  "div", "span", "script", "footer", "h1", "h2", "h3", "h4",
+  "nav", "section", "in", "is", "lambda", "None", "nonlocal", "not", "or", 
+  "pass", "raise", "return", "True", "try", "while", "with", "yield",
+
+
+  "<|", "|>", NULL
+};
+
 struct editorSyntax HLDB[] = {
   {
     "c",
     C_HL_extensions,
     C_HL_keywords,
     "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "python",
+      PYTHON_HL_extensions,
+      PYTHON_HL_keywords,
+      "#", "'''", "'''",
+      HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "html",
+    HTML_HL_extensions,
+    HTML_HL_keywords,
+    "//", "<!--", "-->",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
@@ -402,7 +438,7 @@ int editorRowCxToRx(erow *row, int cx) {
   int j;
   for (j = 0; j < cx; j++) {
     if (row->chars[j] == '\t')
-      rx += (KILO_TAB_STOP - 1) - (rx % KILO_TAB_STOP);
+      rx += (JEDIT_TAB_STOP - 1) - (rx % JEDIT_TAB_STOP);
     rx++;
   }
   return rx;
@@ -413,7 +449,7 @@ int editorRowRxToCx(erow *row, int rx) {
   int cx;
   for (cx = 0; cx < row->size; cx++) {
     if (row->chars[cx] == '\t')
-      cur_rx += (KILO_TAB_STOP - 1) - (cur_rx % KILO_TAB_STOP);
+      cur_rx += (JEDIT_TAB_STOP - 1) - (cur_rx % JEDIT_TAB_STOP);
     cur_rx++;
 
     if (cur_rx > rx) return cx;
@@ -428,13 +464,13 @@ void editorUpdateRow(erow *row) {
     if (row->chars[j] == '\t') tabs++;
 
   free(row->render);
-  row->render = malloc(row->size + tabs*(KILO_TAB_STOP - 1) + 1);
+  row->render = malloc(row->size + tabs*(JEDIT_TAB_STOP - 1) + 1);
 
   int idx = 0;
   for (j = 0; j < row->size; j++) {
     if (row->chars[j] == '\t') {
       row->render[idx++] = ' ';
-      while (idx % KILO_TAB_STOP != 0) row->render[idx++] = ' ';
+      while (idx % JEDIT_TAB_STOP != 0) row->render[idx++] = ' ';
     } else {
       row->render[idx++] = row->chars[j];
     }
@@ -850,10 +886,10 @@ void editorRefreshScreen() {
   editorDrawStatusBar(&ab);
   editorDrawMessageBar(&ab);
 
-  char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
+  char BUFFER[32];
+  snprintf(BUFFER, sizeof(BUFFER), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
                                             (E.rx - E.coloff) + 1);
-  abAppend(&ab, buf, strlen(buf));
+  abAppend(&ab, BUFFER, strlen(BUFFER));
 
   abAppend(&ab, "\x1b[?25h", 6);
 
@@ -949,7 +985,7 @@ void editorMoveCursor(int key) {
 }
 
 void editorProcessKeypress() {
-  static int quit_times = KILO_QUIT_TIMES;
+  static int quit_times = JEDIT_QUIT_TIMES;
 
   int c = editorReadKey();
 
@@ -1026,7 +1062,7 @@ void editorProcessKeypress() {
       break;
   }
 
-  quit_times = KILO_QUIT_TIMES;
+  quit_times = JEDIT_QUIT_TIMES;
 }
 
 /*** init ***/
