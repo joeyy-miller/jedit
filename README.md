@@ -1,4 +1,4 @@
-## jedit
+## jedit: type easier.
 My own personal open source, lazy loading, command line, text editor, for UNIX-like operating systems. Written in C. Clearly written and documented to support easy editing, and branching of the code. Make it your own!
 
 # How to use:
