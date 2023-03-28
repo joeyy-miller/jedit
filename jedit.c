@@ -104,6 +104,14 @@ char *C_HL_keywords[] = {
   "void|", NULL
 };
 
+char *MARKDOWN_HL_extensions[] = { ".md", NULL };
+char *MARKDOWN_HL_keywords[] = {
+  "#", "==", "--", "**", "*", "__", ">", "+",
+  "`", "![", "~", ":", "```",
+
+  NULL
+};
+
 char *PYTHON_HL_extensions[] = { ".python", ".py", NULL };
 char *PYTHON_HL_keywords[] = {
   "and", "as", "assert", "break", "class", "continue", "def", "del",
@@ -112,18 +120,28 @@ char *PYTHON_HL_keywords[] = {
   "pass", "raise", "return", "True", "try", "while", "with", "yield",
 
 
-  "int|", "long|", "double|", "float|", "char|", NULL
+  "int|", "long|", "double|", "float|", "char|", "<|", "==|", "&&|", "=|", ">|", "!=", NULL
 };
 
 char *HTML_HL_extensions[] = { ".html", ".htm", NULL };
 char *HTML_HL_keywords[] = {
-  "<html>", "<html/>", "img", "body", "class", "<p|", "<a|", "href",
-  "div", "span", "script", "footer", "h1", "h2", "h3", "h4",
-  "nav", "section", "in", "is", "lambda", "None", "nonlocal", "not", "or", 
-  "pass", "raise", "return", "True", "try", "while", "with", "yield",
+ "<!DOCTYPE","<a","<abbr","<acronym","<address","<applet","<area",
+ "<article","<aside","<audio","<b","<base","<basefont","Specifies a","<bdi","<bdo",
+ "<big","Defines big","<blockquote","<body","<br","<button","<canvas","<caption","<center",
+ "<cite","<code","<col","<colgroup","<data","<datalist","<dd","<del","<details","<dfn",
+ "<dialog","<dir","<div","<dl","<dt","<em","<embed","<fieldset","<figcaption",
+ "<figure","<font","<footer","<form","<frame","<frameset","<h1","<head","<header","<hr",
+ "<html","<i","<iframe","<img","<input","<ins","<kbd","<label","<legend","<li","<link",
+ "<main","<map","<mark","<meta","<meter","<nav","<noframes","<noscript",
+ "<object","<ol","<optgroup","<option","<output","<p","<param","<picture","<pre","<progress",
+ "<q","<rp","<rt","<ruby","<s","<samp","<script","<section","<select","<small","<source",
+ "<span","<strike","<strong","<style","<sub","<summary","<sup","<svg",
+ "<table","<tbody","<td","<template","<textarea","<tfoot","<th","<thead","<time","<title","<tr",
+ "<track","<tt","<u","<ul","<var","<video","<wbr", ">", "/>",
 
-
-  "<|", "|>", NULL
+  "<|",  "accesskey|", "class|", "contenteditable|", "contextmenu|", "dir|", "draggable|", 
+  "hidden|", "id|", "lang|", "spellcheck|", "style|", "tabindex|", "title|", "href|", "src|",
+  "alt", "charset|", "content|", "name|", "property|", "rel|", "type|", "origin|", "async|", NULL
 };
 
 char *JAVASCRIPT_HL_extensions[] = { ".js", NULL };
@@ -144,7 +162,7 @@ char *JAVASCRIPT_HL_keywords[] = {
 char *PHP_HL_extensions[] = { ".php", NULL };
 char *PHP_HL_keywords[] = {
   "abstract", "and", "as", "break", "callable", "case", "catch", "class", "clone", "const", 
-  "continue", "declare", "default", "do", "echo", "else", "elseif", "empty", "enddeclare", 
+  "continue", "declare", "default", "do", "else", "elseif", "empty", "enddeclare", 
   "endfor", "endforeach", "endif", "endswitch", "endwhile", "extends", "final", "finally",
   "fn", "for", "foreach", "function", "global", "goto", "if", "implements", "include", 
   "include_once", "instanceof", "insteadof", "interface", "isset", "list", "namespace", 
@@ -152,7 +170,7 @@ char *PHP_HL_keywords[] = {
   "return", "static", "switch", "throw", "trait", "try", "unset", "use", "var", "while", 
   "xor", "yield", "yield",
 
-  "<|", "|>", NULL
+  "<|", "|>", "echo|", NULL
 };
 
 struct editorSyntax HLDB[] = {
@@ -189,6 +207,13 @@ struct editorSyntax HLDB[] = {
     PHP_HL_extensions,
     PHP_HL_keywords,
     "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "markdown",
+    MARKDOWN_HL_extensions,
+    MARKDOWN_HL_keywords,
+    "[", "]", "//",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
@@ -765,7 +790,7 @@ void editorFind() {
   int saved_coloff = E.coloff;
   int saved_rowoff = E.rowoff;
 
-  char *query = editorPrompt("Search: %s (Use ESC/Arrows/Enter)",
+  char *query = editorPrompt("Text to search: %s (Use ESC/Arrows/Enter)",
                              editorFindCallback);
 
   if (query) {
@@ -893,7 +918,7 @@ void editorDrawStatusBar(struct abuf *ab) {
     E.filename ? E.filename : "[New File]", E.numrows,
     E.dirty ? "(unsaved)" : "");
   int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
-    E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.numrows);
+    E.syntax ? E.syntax->filetype : "unknown filetype", E.cy + 1, E.numrows);
   if (len > E.screencols) len = E.screencols;
   abAppend(ab, status, len);
   while (len < E.screencols) {
@@ -1047,6 +1072,10 @@ void editorProcessKeypress() {
       write(STDOUT_FILENO, "\x1b[2J", 4);
       write(STDOUT_FILENO, "\x1b[H", 3);
       exit(0);
+      break;
+
+    case CTRL_KEY('r'):
+      editorSetStatusMessage("Run lines are now active.");
       break;
 
     case CTRL_KEY('s'):
