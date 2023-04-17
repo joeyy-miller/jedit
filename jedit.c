@@ -104,6 +104,23 @@ char *C_HL_keywords[] = {
   "void|", NULL
 };
 
+char *C_SHARP_HL_extensions[] = { ".cs", ".hs", NULL };
+char *C_SHARP_HL_keywords[] = {
+  "abstract", "as", "base", "break", "case", "catch", "checked", "class",
+  "const", "continue", "decimal", "delegate", "do", "else", "enum", 
+  "event", "explicit", "extern", "false", "finally", "fixed", "for", 
+  "foreach", "goto", "if", "implicit", "in", "interface", "internal", "is", 
+  "lock", "long", "namespace", "new", "object", "operator", "out", 
+  "override", "params", "private", "protected", "public", "readonly", "ref",
+  "return",  "sealed", "sizeof", "stackalloc", "static",  "struct",
+  "switch", "this", "throw", "try", "typeof", "unchecked", "unsafe",
+  "ushort", "using", "virtual", "volatile", "while"
+
+  "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
+  "void|",  "byte|", "true|", "false|", "default|", "void|", "null|", 
+  "sbyte", "short|", "string", "uint", "ulong", NULL
+};
+
 char *MARKDOWN_HL_extensions[] = { ".md", NULL };
 char *MARKDOWN_HL_keywords[] = {
   "#", "==", "--", "**", "*", "__", ">", "+",
@@ -178,6 +195,13 @@ struct editorSyntax HLDB[] = {
     "c",
     C_HL_extensions,
     C_HL_keywords,
+    "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "c#",
+    C_SHARP_HL_extensions,
+    C_SHARP_HL_keywords,
     "//", "/*", "*/",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
