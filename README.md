@@ -14,11 +14,12 @@ Enter: `.jedit FILENAME` into your terminal. Don't include a file name if you wi
 + Python
 + C
 + C++
++ C#
 + HTML
 + PHP
 + JavaScipt
 
-build: `03262023c`
+build: `0230416b`
 
 # Feature Roadmap:
   + Line Numbers
