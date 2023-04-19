@@ -19,7 +19,7 @@
 
 /*** defines ***/
 
-#define JEDIT_VERSION "0.2 build 230324a"
+#define JEDIT_VERSION "1.02 build 0230416b"
 #define JEDIT_TAB_STOP 4
 #define JEDIT_QUIT_TIMES 3
 
@@ -82,6 +82,7 @@ struct editorConfig {
   int screenrows;
   int screencols;
   int numrows;
+  int curRow;
   erow *row;
   int dirty;
   char *filename;
@@ -873,6 +874,7 @@ void editorScroll() {
 
 void editorDrawRows(struct abuf *ab) {
   int y;
+  int LINE = 1;
   for (y = 0; y < E.screenrows; y++) {
     int filerow = y + E.rowoff;
     if (filerow >= E.numrows) {
@@ -889,7 +891,10 @@ void editorDrawRows(struct abuf *ab) {
         while (padding--) abAppend(ab, " ", 1);
         abAppend(ab, welcome, welcomelen);
       } else {
-        abAppend(ab, "~", 1);
+        char lineChar[1];
+        lineChar[0] = LINE + '0';
+        abAppend(ab, lineChar, 1);
+        LINE++;
       }
     } else {
       int len = E.row[filerow].rsize - E.coloff;
