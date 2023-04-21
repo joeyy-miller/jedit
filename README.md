@@ -19,11 +19,12 @@ Enter: `./jedit FILENAME` into your terminal. Don't include a file name if you w
 + PHP
 + JavaScipt
 
-build: `0230416b`
-
 ### Feature Roadmap:
   + Line Numbers
   + Settings
   + CSS support
+ 
+
+build: `0230416b`
   
 based on : `https://viewsourcecode.org/snaptoken/kilo/index.html`
