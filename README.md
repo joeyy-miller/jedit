@@ -25,3 +25,4 @@ build: `0230416b`
   + Line Numbers
   + Settings
   + CSS support
+based on : `https://viewsourcecode.org/snaptoken/kilo/index.html`
