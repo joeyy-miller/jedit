@@ -24,3 +24,5 @@ build: `03262023c`
   + Line Numbers
   + Settings
   + CSS support
+  
+  Made though: 
