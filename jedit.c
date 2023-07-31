@@ -237,7 +237,7 @@ struct editorSyntax HLDB[] = {
     "markdown",
     MARKDOWN_HL_extensions,
     MARKDOWN_HL_keywords,
-    "[", "]", "//",
+    "//", "[", "]",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
