@@ -129,7 +129,7 @@ char *MARKDOWN_HL_keywords[] = {
   NULL
 };
 
-char *PYTHON_HL_extensions[] = { ".python", ".py", NULL };
+char *PYTHON_HL_extensions[] = { ".python", ".py", "pyc",  NULL };
 char *PYTHON_HL_keywords[] = {
   "and", "as", "assert", "break", "class", "continue", "def", "del",
   "elif", "else", "excpet", "False", "finally", "for", "from", "global",
