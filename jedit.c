@@ -89,6 +89,7 @@ struct editorConfig {
   time_t statusmsg_time;
   struct editorSyntax *syntax;
   struct termios orig_termios;
+  int linenum_width; // Added for line numbers
 };
 
 struct editorConfig E;
@@ -533,7 +534,7 @@ int editorRowCxToRx(erow *row, int cx) {
       rx += (JEDIT_TAB_STOP - 1) - (rx % JEDIT_TAB_STOP);
     rx++;
   }
-  return rx;
+  return rx + 1;  // Add 1 to the rendered position to move cursor one place ahead
 }
 
 int editorRowRxToCx(erow *row, int rx) {
@@ -851,11 +852,14 @@ void abFree(struct abuf *ab) {
 
 /*** output ***/
 
-void editorScroll() {
+void editorScroll(){
   E.rx = 0;
   if (E.cy < E.numrows) {
     E.rx = editorRowCxToRx(&E.row[E.cy], E.cx);
   }
+
+  // Include line number width in the horizontal offset
+  E.rx += E.linenum_width;
 
   if (E.cy < E.rowoff) {
     E.rowoff = E.cy;
@@ -872,67 +876,70 @@ void editorScroll() {
 }
 
 void editorDrawRows(struct abuf *ab) {
-  int y;
-  for (y = 0; y < E.screenrows; y++) {
-    int filerow = y + E.rowoff;
-    if (filerow >= E.numrows) {
-      if (E.numrows == 0 && y == E.screenrows / 3) {
-        char welcome[80];
-        int welcomelen = snprintf(welcome, sizeof(welcome),
-          "jEdit | %s", JEDIT_VERSION);
-        if (welcomelen > E.screencols) welcomelen = E.screencols;
-        int padding = (E.screencols - welcomelen) / 2;
-        if (padding) {
-          abAppend(ab, "~", 1);
-          padding--;
-        }
-        while (padding--) abAppend(ab, " ", 1);
-        abAppend(ab, welcome, welcomelen);
-      } else {
-        abAppend(ab, "~", 1);
-      }
-    } else {
-      int len = E.row[filerow].rsize - E.coloff;
-      if (len < 0) len = 0;
-      if (len > E.screencols) len = E.screencols;
-      char *c = &E.row[filerow].render[E.coloff];
-      unsigned char *hl = &E.row[filerow].hl[E.coloff];
-      int current_color = -1;
-      int j;
-      for (j = 0; j < len; j++) {
-        if (iscntrl(c[j])) {
-          char sym = (c[j] <= 26) ? '@' + c[j] : '?';
-          abAppend(ab, "\x1b[7m", 4);
-          abAppend(ab, &sym, 1);
-          abAppend(ab, "\x1b[m", 3);
-          if (current_color != -1) {
-            char buf[16];
-            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", current_color);
-            abAppend(ab, buf, clen);
-          }
-        } else if (hl[j] == HL_NORMAL) {
-          if (current_color != -1) {
-            abAppend(ab, "\x1b[39m", 5);
-            current_color = -1;
-          }
-          abAppend(ab, &c[j], 1);
-        } else {
-          int color = editorSyntaxToColor(hl[j]);
-          if (color != current_color) {
-            current_color = color;
-            char buf[16];
-            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
-            abAppend(ab, buf, clen);
-          }
-          abAppend(ab, &c[j], 1);
-        }
-      }
-      abAppend(ab, "\x1b[39m", 5);
-    }
+    int y;
+    for (y = 0; y < E.screenrows; y++) {
+        int filerow = y + E.rowoff;
+        if (filerow < E.numrows) {
+            char linenum[E.linenum_width + 2]; // +2 for extra space and null terminator
+            snprintf(linenum, sizeof(linenum), "%*d ", E.linenum_width, filerow + 1);
+            abAppend(ab, linenum, strlen(linenum));
 
-    abAppend(ab, "\x1b[K", 3);
-    abAppend(ab, "\r\n", 2);
-  }
+            int len = E.row[filerow].rsize - E.coloff;
+            if (len < 0) len = 0;
+            if (len > E.screencols) len = E.screencols;
+            char *c = &E.row[filerow].render[E.coloff];
+            unsigned char *hl = &E.row[filerow].hl[E.coloff];
+            int current_color = -1;
+            int j;
+            for (j = 0; j < len; j++) {
+                if (iscntrl(c[j])) {
+                    char sym = (c[j] <= 26) ? '@' + c[j] : '?';
+                    abAppend(ab, "\x1b[7m", 4);
+                    abAppend(ab, &sym, 1);
+                    abAppend(ab, "\x1b[m", 3);
+                    if (current_color != -1) {
+                        char buf[16];
+                        int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", current_color);
+                        abAppend(ab, buf, clen);
+                    }
+                } else if (hl[j] == HL_NORMAL) {
+                    if (current_color != -1) {
+                        abAppend(ab, "\x1b[39m", 5);
+                        current_color = -1;
+                    }
+                    abAppend(ab, &c[j], 1);
+                } else {
+                    int color = editorSyntaxToColor(hl[j]);
+                    if (color != current_color) {
+                        current_color = color;
+                        char buf[16];
+                        int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+                        abAppend(ab, buf, clen);
+                    }
+                    abAppend(ab, &c[j], 1);
+                }
+            }
+            abAppend(ab, "\x1b[39m", 5);
+        } else {
+            if (E.numrows == 0 && y == E.screenrows / 3) {
+                char welcome[80];
+                int welcomelen = snprintf(welcome, sizeof(welcome),
+                  "jEdit - version %s", JEDIT_VERSION);
+                if (welcomelen > E.screencols) welcomelen = E.screencols;
+                int padding = (E.screencols - welcomelen) / 2;
+                if (padding) {
+                    abAppend(ab, "~", 1);
+                    padding--;
+                }
+                while (padding--) abAppend(ab, " ", 1);
+                abAppend(ab, welcome, welcomelen);
+            } else {
+                abAppend(ab, "~", 1);
+            }
+        }
+        abAppend(ab, "\x1b[K", 3); // Clear the rest of the line
+        abAppend(ab, "\r\n", 2); // Newline
+    }
 }
 
 void editorDrawStatusBar(struct abuf *ab) {
@@ -967,26 +974,26 @@ void editorDrawMessageBar(struct abuf *ab) {
 }
 
 void editorRefreshScreen() {
-  editorScroll();
+    editorScroll();
 
-  struct abuf ab = ABUF_INIT;
+    struct abuf ab = ABUF_INIT;
 
-  abAppend(&ab, "\x1b[?25l", 6);
-  abAppend(&ab, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[?25l", 6);  // Hide cursor during refresh
+    abAppend(&ab, "\x1b[H", 3);     // Reposition cursor at home
 
-  editorDrawRows(&ab);
-  editorDrawStatusBar(&ab);
-  editorDrawMessageBar(&ab);
+    editorDrawRows(&ab);
+    editorDrawStatusBar(&ab);
+    editorDrawMessageBar(&ab);
 
-  char BUFFER[32];
-  snprintf(BUFFER, sizeof(BUFFER), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
-                                            (E.rx - E.coloff) + 1);
-  abAppend(&ab, BUFFER, strlen(BUFFER));
+    // Cursor positioning with one position ahead offset
+    char buf[32];
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, (E.rx - E.coloff) + 1);
+    abAppend(&ab, buf, strlen(buf));
 
-  abAppend(&ab, "\x1b[?25h", 6);
+    abAppend(&ab, "\x1b[?25h", 6);  // Show cursor after refresh
 
-  write(STDOUT_FILENO, ab.b, ab.len);
-  abFree(&ab);
+    write(STDOUT_FILENO, ab.b, ab.len);
+    abFree(&ab);
 }
 
 void editorSetStatusMessage(const char *fmt, ...) {
@@ -1038,42 +1045,43 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
 }
 
 void editorMoveCursor(int key) {
-  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+    erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
 
-  switch (key) {
-    case ARROW_LEFT:
-      if (E.cx != 0) {
-        E.cx--;
-      } else if (E.cy > 0) {
-        E.cy--;
-        E.cx = E.row[E.cy].size;
-      }
-      break;
-    case ARROW_RIGHT:
-      if (row && E.cx < row->size) {
-        E.cx++;
-      } else if (row && E.cx == row->size) {
-        E.cy++;
-        E.cx = 0;
-      }
-      break;
-    case ARROW_UP:
-      if (E.cy != 0) {
-        E.cy--;
-      }
-      break;
-    case ARROW_DOWN:
-      if (E.cy < E.numrows) {
-        E.cy++;
-      }
-      break;
-  }
+    switch (key) {
+        case ARROW_LEFT:
+            if (E.cx != 0) {
+                E.cx--;
+            } else if (E.cy > 0) {
+                E.cy--;
+                E.cx = E.row[E.cy].size;
+            }
+            break;
+        case ARROW_RIGHT:
+            if (row && E.cx < row->size) {
+                E.cx++;
+            } else if (row && E.cx == row->size) {
+                E.cy++;
+                E.cx = 0;
+            }
+            break;
+        case ARROW_UP:
+            if (E.cy != 0) {
+                E.cy--;
+            }
+            break;
+        case ARROW_DOWN:
+            if (E.cy < E.numrows) {
+                E.cy++;
+            }
+            break;
+    }
 
-  row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
-  int rowlen = row ? row->size : 0;
-  if (E.cx > rowlen) {
-    E.cx = rowlen;
-  }
+    // Ensure cursor does not move into non-existent space
+    row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+    int rowlen = row ? row->size : 0;
+    if (E.cx > rowlen) {
+        E.cx = rowlen;
+    }
 }
 
 void editorProcessKeypress() {
@@ -1164,21 +1172,34 @@ void editorProcessKeypress() {
 /*** init ***/
 
 void initEditor() {
-  E.cx = 0;
-  E.cy = 0;
-  E.rx = 0;
-  E.rowoff = 0;
-  E.coloff = 0;
-  E.numrows = 0;
-  E.row = NULL;
-  E.dirty = 0;
-  E.filename = NULL;
-  E.statusmsg[0] = '\0';
-  E.statusmsg_time = 0;
-  E.syntax = NULL;
+    E.cx = 0;
+    E.cy = 0;
+    E.rx = 0;
+    E.rowoff = 0;
+    E.coloff = 0;
+    E.numrows = 0;
+    E.row = NULL;
+    E.dirty = 0;
+    E.filename = NULL;
+    E.statusmsg[0] = '\0';
+    E.statusmsg_time = 0;
+    E.syntax = NULL;
 
-  if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
-  E.screenrows -= 2;
+    if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+
+    // Update line number width
+    E.linenum_width = 0;
+    int temp = E.numrows;
+    while (temp) {
+        E.linenum_width++;
+        temp /= 10;
+    }
+
+    // Reduce screen columns to make space for line numbers
+    E.linenum_width += 3; // Added +3 for padding and space between line numbers and text
+    E.screencols -= E.linenum_width;
+
+    E.screenrows -= 2; // Leave space for the status bar and message bar
 }
 
 int main(int argc, char *argv[]) {
